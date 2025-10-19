@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Login</title>
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; background: #f9fafb; }
+    .wrap { max-width: 400px; margin: 5rem auto; background: white; padding: 2rem; border-radius: .75rem; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    h1 { text-align: center; margin-bottom: 1.5rem; }
+    form { display: flex; flex-direction: column; gap: 1rem; }
+    input[type="text"], input[type="password"] {
+      padding: .5rem; font-size: 1rem; border: 1px solid #d1d5db; border-radius: .5rem;
+    }
+    button {
+      background: #2563eb; color: white; padding: .5rem; border: none; border-radius: .5rem; cursor: pointer;
+    }
+    button:hover { background: #1d4ed8; }
+    .error { color: #dc2626; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Login</h1>
+
+    <div th:if="${param.error}" class="error">Invalid username or password</div>
+    <div th:if="${param.logout}" class="error" style="color:green;">You have been logged out</div>
+
+    <form th:action="@{/login}" method="post">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+        <label for="username">Username</label>
+        <input type="text" name="username" id="username" required>
+
+        <label for="password">Password</label>
+        <input type="password" name="password" id="password" required>
+
+      <button type="submit">Sign In</button>
+        <div th:if="${param.error}" style="color:red;">
+            Invalid username or password
+        </div>
+
+    </form>
+  </div>
+</body>
+</html>

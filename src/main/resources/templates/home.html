@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Library Catalog</title>
+  <style>
+    body {
+      font-family: system-ui, Arial, sans-serif;
+      margin: 0; padding: 0;
+      background: #f8fafc;
+      display: flex; flex-direction: column; min-height: 100vh;
+    }
+    header {
+      background: #2563eb;
+      color: white;
+      text-align: center;
+      padding: 2rem 0;
+    }
+    .logo {
+      height: 180px;
+      margin-bottom: 2rem;
+    }
+    .gradient {
+      background: linear-gradient(180deg, #2563eb 0%, #1e40af 100%);
+      color: white;
+      text-align: center;
+      padding: 5rem 1rem;
+    }
+    .gradient h1 {
+      font-size: 2.8rem;
+      margin-bottom: 1rem;
+    }
+    .gradient p {
+      font-size: 1.2rem;
+      max-width: 600px;
+      margin: 0 auto 2rem auto;
+      color: #e2e8f0;
+    }
+    .container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 2rem;
+    }
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+    p {
+      color: #4b5563;
+      font-size: 1.1rem;
+      margin-bottom: 2rem;
+      max-width: 500px;
+    }
+    a.button {
+      display: inline-block;
+      margin: .5rem;
+      padding: .75rem 1.5rem;
+      background: #2563eb;
+      color: white;
+      text-decoration: none;
+      border-radius: .5rem;
+      font-weight: 500;
+      transition: background .2s;
+    }
+    a.button:hover {
+      background: #1e40af;
+    }
+    footer {
+      background: #f1f5f9;
+      padding: 1rem;
+      text-align: center;
+      color: #64748b;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="gradient">
+    <img src="/images/Library.png" alt="Library Catalog Logo" class="logo">
+    <h1>Welcome to Library Catalog</h1>
+    <p>
+      Explore our collection of timeless classics and manage your borrowed books.  
+      Please log in to rent or request books.
+    </p>
+
+    <div>
+      <a href="/books" class="button">View Books</a>
+      <a href="/login" class="button">Login</a>
+    </div>
+  </header>
+
+  <footer>
+    &copy; 2025 Library Catalog
+  </footer>
+
+</body>
+</html>

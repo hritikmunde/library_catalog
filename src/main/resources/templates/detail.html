@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Book Details</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        :root {
+            --primary: #2563eb;
+            --text: #1f2937;
+            --bg: #f9fafb;
+            --border: #e5e7eb;
+            --ok: #dcfce7;
+            --no: #fee2e2;
+        }
+
+        body {
+            font-family: "Inter", system-ui, Arial, sans-serif;
+            background: var(--bg);
+            margin: 2rem;
+            color: var(--text);
+        }
+
+        .wrap {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+            padding: 2rem;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            border-bottom: 2px solid var(--border);
+            padding: 0.75rem;
+            font-size: 0.95rem;
+            color: #4b5563;
+        }
+
+        td {
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+        }
+
+        .ok {
+            background: var(--ok);
+        }
+
+        .no {
+            background: var(--no);
+        }
+    </style>
+
+</head>
+
+<body>
+    <div class="wrap">
+        <h1>Book Details</h1>
+        <p><a href="/books" aria-label="Back to Book List">← Back to Book List</a></p>
+        <div class="book-header">
+            <img th:if="${book.imageUrl}" th:src="${book.imageUrl}" alt="Book Image" width="150" />
+            <div>
+                <h2 th:text="${book.title}">Book Title</h2>
+                <p><strong>Author:</strong> <span th:text="${book.author}">Book Author</span></p>
+                <p><strong>ISBN:</strong> <span th:text="${book.isbn}">Book ISBN</span></p>
+                <p><strong>Status:</strong>
+                    <span th:if="${book.available}" class="badge ok">Available</span>
+                    <span th:if="${!book.available}" class="badge no">Checked out</span>
+                </p>
+            </div>
+        </div>
+        <div class="desc">
+            <h3>Description</h3>
+            <p th:text="${book.description}">Book Description</p>
+        </div>
+        <div style="margin-top: 1.5rem;">
+            <form th:if="${book.available and user != null}" th:action="@{/books/{id}/rent(id=${book.id})}" method="post">
+                <button type="submit">Rent this book</button>
+            </form>
+
+            <form th:if="${!book.available and book.requestedBy == null and user != null and user != book.rentedBy}" th:action="@{/books/{id}/request(id=${book.id})}" method="post">
+                <button type="submit">Request this book</button>
+            </form>
+
+            <form th:if="${!book.available and user == book.rentedBy}" th:action="@{/books/{id}/return(id=${book.id})}" method="post">
+                <button type="submit" style="background: #10b981;">Return book</button>
+            </form>
+        </div>
+        <p><a href="/books">Back to Book List</a></p>
+    </div>
+</body>
+</html>
