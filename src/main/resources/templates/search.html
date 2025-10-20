@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <title th:text="${#strings.isEmpty(query) ? 'Search' : 'Results for ' + query}">Search</title>
+  <style>
+    body{font-family:system-ui,Arial,sans-serif;background:#f9fafb;margin:2rem;}
+    .wrap{max-width:900px;margin:0 auto;background:#fff;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.05);padding:2rem;}
+    table{width:100%;border-collapse:collapse;margin-top:1rem;}
+    th,td{padding:.75rem;border-bottom:1px solid #e5e7eb;text-align:left;}
+    .badge{padding:.2rem .6rem;border-radius:9999px;font-size:.8rem}
+    .ok{background:#dcfce7} .no{background:#fee2e2}
+    a{color:#2563eb;text-decoration:none} a:hover{text-decoration:underline}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Search</h1>
+
+  <form th:action="@{/search}" method="get">
+    <input name="q" th:value="${query}" placeholder="Title, author, or ISBN" style="padding:.5rem;min-width:320px;" />
+    <button type="submit" style="padding:.5rem 1rem;">Search</button>
+    <a href="/" style="margin-left:.5rem;">Home</a>
+  </form>
+
+  <div th:if="${#lists.isEmpty(books)}" style="margin-top:1rem;color:#6b7280;">
+    <span th:if="${#strings.isEmpty(query)}">Type something to search the catalog.</span>
+    <span th:if="${!#strings.isEmpty(query)}">No books found for "<span th:text="${query}">q</span>".</span>
+  </div>
+
+  <table th:if="${!#lists.isEmpty(books)}">
+    <thead><tr><th>Title</th><th>Author</th><th>ISBN</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      <tr th:each="b : ${books}">
+        <td><a th:href="@{/books/{id}(id=${b.id})}" th:text="${b.title}">Title</a></td>
+        <td th:text="${b.author}">Author</td>
+        <td th:text="${b.isbn}">ISBN</td>
+        <td>
+          <span th:if="${b.rentedBy == null}" class="badge ok">Available</span>
+          <span th:if="${b.rentedBy != null}" class="badge no">Rented</span>
+        </td>
+        <td><a th:href="@{/books/{id}(id=${b.id})}">View</a></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+</body>
+</html>

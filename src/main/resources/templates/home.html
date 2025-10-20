@@ -94,6 +94,12 @@
     </div>
   </header>
 
+  <form th:action="@{/search}" method="get" style="margin-top:1rem;">
+    <input name="q" type="text" placeholder="Search by title, author, or ISBN" required style="padding:.6rem; min-width:320px;" />
+    <button type="submit" style="padding:.6rem 1rem;">Search</button>
+  </form>
+
+
   <footer>
     &copy; 2025 Library Catalog
   </footer>
