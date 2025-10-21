@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <title th:text="${#strings.isEmpty(query) ? 'Search' : 'Results for ' + query}">Search</title>
+  <link rel="stylesheet" href="/css/header.css">
+
   <style>
     body{font-family:system-ui,Arial,sans-serif;background:#f9fafb;margin:2rem;}
     .wrap{max-width:900px;margin:0 auto;background:#fff;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.05);padding:2rem;}
@@ -14,6 +16,8 @@
   </style>
 </head>
 <body>
+  <div th:replace="fragments/topbar :: topbar"></div>
+
 <div class="wrap">
   <h1>Search</h1>
 
@@ -32,7 +36,7 @@
     <thead><tr><th>Title</th><th>Author</th><th>ISBN</th><th>Status</th><th></th></tr></thead>
     <tbody>
       <tr th:each="b : ${books}">
-        <td><a th:href="@{/books/{id}(id=${b.id})}" th:text="${b.title}">Title</a></td>
+        <td><a th:href="@{/books/{id}(id=${b.id}, q=${query})}" th:text="${b.title}">Title</a></td>
         <td th:text="${b.author}">Author</td>
         <td th:text="${b.isbn}">ISBN</td>
         <td>

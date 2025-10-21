@@ -25,7 +25,7 @@
     <div th:if="${param.error}" class="error">Invalid username or password</div>
     <div th:if="${param.logout}" class="error" style="color:green;">You have been logged out</div>
 
-    <form th:action="@{/login}" method="post">
+    <form th:action="@{/login(continue=${param.continue})}" method="post">
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 
         <label for="username">Username</label>

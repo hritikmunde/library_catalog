@@ -8,6 +8,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 
 @Configuration
 public class SecurityConfig {
@@ -33,9 +36,23 @@ public class SecurityConfig {
     
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        AuthenticationSuccessHandler successHandler = (request, response, authentication) -> {
+            String target = request.getParameter("continue");
+            if (target != null && !target.isBlank()) {
+                SimpleUrlAuthenticationSuccessHandler simple = new SimpleUrlAuthenticationSuccessHandler("/");
+                simple.setTargetUrlParameter("continue");
+                simple.setAlwaysUseDefaultTargetUrl(false);
+                simple.onAuthenticationSuccess(request, response, authentication);
+            } else {
+                SavedRequestAwareAuthenticationSuccessHandler saved = new SavedRequestAwareAuthenticationSuccessHandler();
+                saved.setDefaultTargetUrl("/"); // fallback if no saved request
+                saved.onAuthenticationSuccess(request, response, authentication);
+            }
+        };
+        
         http
             .authorizeHttpRequests((requests) -> requests
-                .requestMatchers("/", "/search", "/login", "/css/**", "/images/**").permitAll()
+                .requestMatchers("/", "/search", "/login", "/css/**", "/images/**", "/error", "/favicon.ico", "/js/**", "/webjars/**").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/books/*").permitAll()
                 .anyRequest().authenticated()
             )
@@ -43,11 +60,13 @@ public class SecurityConfig {
                 .loginPage("/login")
                 .loginProcessingUrl("/login")
                 .failureUrl("/login?error=true")
-                .defaultSuccessUrl("/books", true)
+                .successHandler(successHandler)
                 .permitAll()
             )
             .logout((logout) -> logout
-                .logoutSuccessUrl("/login?logout=true")
+                .logoutSuccessUrl("/")
+                .invalidateHttpSession(true)
+                .deleteCookies("JSESSIONID")
                 .permitAll()
             )
             .csrf(csrf -> csrf

@@ -10,6 +10,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 public class BookController {
@@ -26,11 +27,12 @@ public class BookController {
     // }
 
     @GetMapping("/books/{id}")
-    public String viewBook(@PathVariable Long id, Model model, Principal principal) {
+    public String viewBook(@PathVariable Long id, @RequestParam(value="q", required = false) String q, Model model, Principal principal) {
         Book book = bookRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Invalid book Id:" + id));
         model.addAttribute("book", book);
         model.addAttribute("user", principal != null ? principal.getName() : null);
+        model.addAttribute("q", q);
         
         return "detail"; // This will look for a template named "book_detail.html"
     }
