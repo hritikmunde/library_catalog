@@ -35,7 +35,8 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests((requests) -> requests
-                .requestMatchers("/", "/books", "/list", "books/*", "/css/**", "/images/**").permitAll()
+                .requestMatchers("/", "/search", "/login", "/css/**", "/images/**").permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/books/*").permitAll()
                 .anyRequest().authenticated()
             )
             .formLogin((form) -> form

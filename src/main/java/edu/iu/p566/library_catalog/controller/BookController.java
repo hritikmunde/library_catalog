@@ -19,11 +19,11 @@ public class BookController {
         this.bookRepository = bookRepository;
     }
 
-    @GetMapping("/books")
-    public String listBooks(Model model) {
-        model.addAttribute("books", bookRepository.findAll());
-        return "list"; // This will look for a template named "book_list.html"
-    }
+    // @GetMapping("/books")
+    // public String listBooks(Model model) {
+    //     model.addAttribute("books", bookRepository.findAll());
+    //     return "list"; // This will look for a template named "book_list.html"
+    // }
 
     @GetMapping("/books/{id}")
     public String viewBook(@PathVariable Long id, Model model, Principal principal) {
