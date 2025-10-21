@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="https://www.thymeleaf.org/extras/spring-security">
+<body>
+  <header th:fragment="topbar" class="topbar">
+    <!--<link rel="stylesheet" href="/css/header.css">-->
+    <div class="brand">
+      <a href="/"><img src="/images/Library.png" alt="Library Catalog" class="logo"></a>
+      <a href="/" class="title">Library Catalog</a>
+    </div>
+
+    <div class="actions">
+      <a sec:authorize="!isAuthenticated()" th:href="@{/login(continue=${continueUrl})}" class="btn">Login</a>
+      <div sec:authorize="isAuthenticated()" class="profile">
+        <div class="avatar" th:text="${#authentication?.name?.substring(0,1).toUpperCase()}">U</div>
+        <div class="menu">
+          <span th:text="${#authentication.name}">username</span>
+          <form th:action="@{/logout}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <button type="submit" class="logout">Logout</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </header>
+</body>
+</html>

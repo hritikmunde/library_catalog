@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <title>Book Details</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="/css/header.css">
+
     <style>
         :root {
             --primary: #2563eb;
@@ -81,9 +83,14 @@
 </head>
 
 <body>
+    <div th:replace="fragments/topbar :: topbar"></div>
     <div class="wrap">
         <h1>Book Details</h1>
-        <p><a href="/search" aria-label="Back to Book List">← Back to Search</a></p>
+        <!-- <p><a href="/search" aria-label="Back to Book List">← Back to Search</a></p> -->
+        <p>
+            <a th:if="${q != null and !#strings.isEmpty(q)}" th:href="@{/search(q=${q})}">← Back to search</a>
+            <a th:if="${q == null or #strings.isEmpty(q)}" href="/">← Back to home</a>
+        </p>
         <div class="book-header">
             <img th:if="${book.imageUrl}" th:src="${book.imageUrl}" alt="Book Image" width="150" />
             <div>

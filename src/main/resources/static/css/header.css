@@ -1,0 +1,80 @@
+:root { --blue:#2563eb; --text:#111827; --muted:#6b7280; --border:#e5e7eb; }
+
+/* Header container */
+header.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:1rem;
+  padding:.75rem 1rem;
+  background:#fff;
+  border-bottom:1px solid var(--border);
+}
+
+/* Left: brand */
+header.topbar .brand{
+  display:flex;
+  align-items:center;
+  gap:.5rem;
+}
+header.topbar .logo{ height:36px; }
+header.topbar .title{ font-weight:600; text-decoration:none; color:var(--text); }
+
+/* Right: actions (push to far right) */
+header.topbar .actions{
+  margin-left:auto;              /* 👈 THIS moves it to the right */
+  display:flex;
+  align-items:center;
+  gap:1rem;
+}
+
+/* Login button */
+header.topbar .btn{
+  background:var(--blue);
+  color:#fff;
+  padding:.5rem .9rem;
+  border-radius:.5rem;
+  text-decoration:none;
+}
+header.topbar .btn:hover{ filter:brightness(.95); }
+
+/* Profile + dropdown */
+header.topbar .profile{ position:relative; }
+header.topbar .avatar{
+  width:36px; height:36px;
+  border-radius:9999px;
+  background:var(--blue); color:#fff;
+  display:grid; place-items:center;
+  cursor:pointer; user-select:none;
+}
+
+header.topbar .profile .menu{
+  position:absolute;
+  right:0; top:42px;
+  z-index:50;
+  min-width:180px;
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:.5rem;
+  box-shadow:0 4px 10px rgba(0,0,0,.06);
+  padding:.5rem;
+  display:none;
+}
+header.topbar .profile:hover .menu{ display:block; }
+
+header.topbar .menu span{
+  display:block;
+  padding:.5rem .75rem;
+  color:#6b7280;
+}
+header.topbar .menu .logout{
+  width:100%;
+  text-align:left;
+  background:none; border:none;
+  padding:.5rem .75rem;
+  cursor:pointer;
+}
+header.topbar .menu .logout:hover{ background:#f3f4f6; }
+
+/* Avoid page-wide link rules messing with header */
+header.topbar a{ text-decoration:none; color:#2563eb; }
