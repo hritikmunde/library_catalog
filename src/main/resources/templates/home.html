@@ -1,108 +1,45 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="https://www.thymeleaf.org/extras/spring-security">
 <head>
   <meta charset="UTF-8">
   <title>Library Catalog</title>
-  <style>
-    body {
-      font-family: system-ui, Arial, sans-serif;
-      margin: 0; padding: 0;
-      background: #f8fafc;
-      display: flex; flex-direction: column; min-height: 100vh;
-    }
-    header {
-      background: #2563eb;
-      color: white;
-      text-align: center;
-      padding: 2rem 0;
-    }
-    .logo {
-      height: 180px;
-      margin-bottom: 2rem;
-    }
-    .gradient {
-      background: linear-gradient(180deg, #2563eb 0%, #1e40af 100%);
-      color: white;
-      text-align: center;
-      padding: 5rem 1rem;
-    }
-    .gradient h1 {
-      font-size: 2.8rem;
-      margin-bottom: 1rem;
-    }
-    .gradient p {
-      font-size: 1.2rem;
-      max-width: 600px;
-      margin: 0 auto 2rem auto;
-      color: #e2e8f0;
-    }
-    .container {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-      padding: 2rem;
-    }
-    h1 {
-      font-size: 2.5rem;
-      margin-bottom: 1rem;
-    }
-    p {
-      color: #4b5563;
-      font-size: 1.1rem;
-      margin-bottom: 2rem;
-      max-width: 500px;
-    }
-    a.button {
-      display: inline-block;
-      margin: .5rem;
-      padding: .75rem 1.5rem;
-      background: #2563eb;
-      color: white;
-      text-decoration: none;
-      border-radius: .5rem;
-      font-weight: 500;
-      transition: background .2s;
-    }
-    a.button:hover {
-      background: #1e40af;
-    }
-    footer {
-      background: #f1f5f9;
-      padding: 1rem;
-      text-align: center;
-      color: #64748b;
-      font-size: 0.9rem;
-    }
-  </style>
+  <link rel="stylesheet" href="/css/home.css">
 </head>
 <body>
 
-  <header class="gradient">
-    <img src="/images/Library.png" alt="Library Catalog Logo" class="logo">
-    <h1>Welcome to Library Catalog</h1>
-    <p>
-      Explore our collection of timeless classics and manage your borrowed books.  
-      Please log in to rent or request books.
-    </p>
+<header class="topbar">
+  <div class="brand">
+    <img src="/images/Library.png" alt="Library Catalog" class="logo">
+    <span class="title">Library Catalog</span>
+  </div>
 
-    <div>
-      <a href="/books" class="button">View Books</a>
-      <a href="/login" class="button">Login</a>
+  <div class="actions">
+    <!-- Show when NOT logged in -->
+    <a sec:authorize="!isAuthenticated()" href="/login" class="btn">Login</a>
+
+    <!-- Show when logged in -->
+    <div sec:authorize="isAuthenticated()" class="profile">
+      <div class="avatar" th:text="${#authentication?.name?.substring(0,1).toUpperCase()}">U</div>
+      <div class="menu">
+        <span th:text="${#authentication.name}">username</span>
+        <form th:action="@{/logout}" method="post">
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+          <button type="submit" class="logout">Logout</button>
+        </form>
+      </div>
     </div>
-  </header>
+  </div>
+</header>
 
-  <form th:action="@{/search}" method="get" style="margin-top:1rem;">
-    <input name="q" type="text" placeholder="Search by title, author, or ISBN" required style="padding:.6rem; min-width:320px;" />
-    <button type="submit" style="padding:.6rem 1rem;">Search</button>
+<main class="hero">
+  <h1>Find your next book</h1>
+  <p>Search by title, author, or ISBN.</p>
+
+  <form th:action="@{/search}" method="get" class="searchbar">
+    <input name="q" type="text" placeholder="e.g., mockingbird, fitzgerald, 9780743273565" required>
+    <button type="submit">Search</button>
   </form>
-
-
-  <footer>
-    &copy; 2025 Library Catalog
-  </footer>
+</main>
 
 </body>
 </html>

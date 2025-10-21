@@ -83,7 +83,7 @@
 <body>
     <div class="wrap">
         <h1>Book Details</h1>
-        <p><a href="/books" aria-label="Back to Book List">← Back to Book List</a></p>
+        <p><a href="/search" aria-label="Back to Book List">← Back to Search</a></p>
         <div class="book-header">
             <img th:if="${book.imageUrl}" th:src="${book.imageUrl}" alt="Book Image" width="150" />
             <div>
@@ -113,7 +113,6 @@
                 <button type="submit" style="background: #10b981;">Return book</button>
             </form>
         </div>
-        <p><a href="/books">Back to Book List</a></p>
     </div>
 </body>
 </html>
