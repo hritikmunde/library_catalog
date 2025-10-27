@@ -50,6 +50,11 @@
                 <strong>Author:</strong> <span th:text="${book.author}">Author</span><br>
                 <strong>ISBN:</strong> <span th:text="${book.isbn}">ISBN</span>
             </p>
+            <p style="margin-top:.5rem;">
+                <strong>Due date:</strong>
+                <span th:text="${#temporals.format(dueDate, 'MMMM d, yyyy')}">October 31, 2025</span>
+                <small style="color:#6b7280;">(2 weeks from today)</small>
+            </p>
         </div>
 
         <!-- POST to /books/{id}/rent (preserve q) -->

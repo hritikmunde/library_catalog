@@ -1,10 +1,13 @@
 package edu.iu.p566.library_catalog.model;
 
+import java.time.LocalDate;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Column;
+
 
 import lombok.*;
 
@@ -32,4 +35,8 @@ public class Book {
     private String description;
 
     private String imageUrl;
+
+    // Rental dates
+    private LocalDate rentedAt;
+    private LocalDate dueDate;
 }
