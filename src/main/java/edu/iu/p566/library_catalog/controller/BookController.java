@@ -2,6 +2,8 @@ package edu.iu.p566.library_catalog.controller;
 
 import edu.iu.p566.library_catalog.model.Book;
 import edu.iu.p566.library_catalog.repository.BookRepository;
+//import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.security.Principal;
 
@@ -37,15 +39,34 @@ public class BookController {
         return "detail"; // This will look for a template named "book_detail.html"
     }
 
-    @PostMapping("/books/{id}/rent")
-    public String rentBook(@PathVariable Long id, Principal principal) {
+    @GetMapping("/books/{id}/checkout")
+    public String checkoutBook(@PathVariable Long id, @RequestParam(value = "q", required = false) String q, Model model, Principal principal) {
         Book book = bookRepository.findById(id).orElseThrow();
-        if (book.isAvailable() && principal != null) {
-            book.setAvailable(false);
-            book.setRentedBy(principal.getName());
-            bookRepository.save(book);
+        if (!book.isAvailable()) {
+            return "redirect:/books/" + id + (q != null ? ("?q=" + q + "&msg=unavailable") : "?msg=unavailable");
         }
-        return "redirect:/books/" + id;
+        model.addAttribute("book", book);
+        model.addAttribute(q, q);
+        model.addAttribute("user", principal != null ? principal.getName() : null);
+        return "checkout"; // This will look for a template named "checkout.html"
+    }
+
+    @PostMapping("/books/{id}/rent")
+    @Transactional
+    public String rentBook(@PathVariable Long id, @RequestParam(value = "q", required = false) String q, Principal principal) {
+        if (principal == null) {
+            // Safety (Security already requires auth for this route)
+            String cont = "/books/" + id + "/checkout" + (q != null ? ("?q=" + q) : "");
+            return "redirect:/login?continue=" + cont;
+        }
+        // Atomic update; returns 1 if we successfully flipped to rented
+        int updated = bookRepository.rentBook(id, principal.getName());
+        if (updated == 1) {
+            return "redirect:/books/" + id + (q != null ? ("?q=" + q + "&msg=rented") : "?msg=rented");
+        } else {
+            // someone else rented first
+            return "redirect:/books/" + id + (q != null ? ("?q=" + q + "&msg=unavailable") : "?msg=unavailable");
+        }
     }
 
     @PostMapping("/books/{id}/request")

@@ -52,6 +52,8 @@ public class SecurityConfig {
         
         http
             .authorizeHttpRequests((requests) -> requests
+                .requestMatchers(org.springframework.http.HttpMethod.GET,  "/books/*/checkout").authenticated()
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/books/*/rent").authenticated()
                 .requestMatchers("/", "/search", "/login", "/css/**", "/images/**", "/error", "/favicon.ico", "/js/**", "/webjars/**").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/books/*").permitAll()
                 .anyRequest().authenticated()

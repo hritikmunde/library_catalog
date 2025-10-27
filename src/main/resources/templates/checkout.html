@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Confirm Rent</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="/css/header.css">
+    <style>
+        .wrap {
+            max-width: 720px;
+            margin: 2rem auto;
+            padding: 1rem
+        }
+
+        .card {
+            border: 1px solid #e5e7eb;
+            border-radius: .5rem;
+            padding: 1rem;
+            background: #fff
+        }
+
+        .btn {
+            display: inline-block;
+            background: #2563eb;
+            color: #fff;
+            padding: .5rem .9rem;
+            border-radius: .5rem;
+            text-decoration: none;
+            border: none;
+            cursor: pointer
+        }
+
+        .btn-secondary {
+            background: #6b7280
+        }
+    </style>
+</head>
+
+<body>
+    <div th:replace="fragments/topbar :: topbar"></div>
+
+    <main class="wrap">
+        <h1>Confirm Rental</h1>
+        <p>You’re about to rent:</p>
+
+        <div class="card">
+            <h2 th:text="${book.title}">Title</h2>
+            <p>
+                <strong>Author:</strong> <span th:text="${book.author}">Author</span><br>
+                <strong>ISBN:</strong> <span th:text="${book.isbn}">ISBN</span>
+            </p>
+        </div>
+
+        <!-- POST to /books/{id}/rent (preserve q) -->
+        <form th:action="@{/books/{id}/rent(id=${book.id}, q=${q})}" method="post" style="margin-top:1rem;">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <button type="submit" class="btn" style="background:#16a34a;">Confirm rent</button>
+            <a th:href="@{/books/{id}(id=${book.id}, q=${q})}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </main>
+</body>
+
+</html>
