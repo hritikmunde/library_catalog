@@ -1,5 +1,8 @@
 package edu.iu.p566.library_catalog.controller;
 
+import org.springframework.beans.factory.annotation.Value;
+import java.time.LocalDate;
+
 import edu.iu.p566.library_catalog.model.Book;
 import edu.iu.p566.library_catalog.repository.BookRepository;
 //import jakarta.transaction.Transactional;
@@ -45,6 +48,7 @@ public class BookController {
         if (!book.isAvailable()) {
             return "redirect:/books/" + id + (q != null ? ("?q=" + q + "&msg=unavailable") : "?msg=unavailable");
         }
+        model.addAttribute("dueDate", LocalDate.now().plusDays(loanDays));
         model.addAttribute("book", book);
         model.addAttribute(q, q);
         model.addAttribute("user", principal != null ? principal.getName() : null);
@@ -62,6 +66,11 @@ public class BookController {
         // Atomic update; returns 1 if we successfully flipped to rented
         int updated = bookRepository.rentBook(id, principal.getName());
         if (updated == 1) {
+            Book b = bookRepository.findById(id).orElseThrow();
+            b.setRentedAt(LocalDate.now());
+            b.setDueDate(LocalDate.now().plusDays(loanDays));
+            bookRepository.save(b);
+
             return "redirect:/books/" + id + (q != null ? ("?q=" + q + "&msg=rented") : "?msg=rented");
         } else {
             // someone else rented first
@@ -80,13 +89,19 @@ public class BookController {
     }
 
     @PostMapping("/books/{id}/return")
-    public String returnBook(@PathVariable Long id, Principal principal) {
+    public String returnBook(@PathVariable Long id, @RequestParam(value = "q", required = false) String q, Principal principal) {
         Book book = bookRepository.findById(id).orElseThrow();
         if (!book.isAvailable() && principal != null && principal.getName().equals(book.getRentedBy())) {
             book.setAvailable(true);
             book.setRentedBy(null);
+            book.setRentedAt(null);
+            book.setDueDate(null);
             bookRepository.save(book);
+            return "redirect:/books/" + id + (q != null ? ("?q=" + q + "&msg=returned") : "?msg=returned");
         }
-        return "redirect:/books/" + id;
+        return "redirect:/books/" + id + (q != null ? ("?q=" + q) : "");
     }
+
+    @Value("${app.loan-days:14}")
+    private int loanDays;
 }
