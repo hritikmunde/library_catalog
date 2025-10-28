@@ -136,12 +136,15 @@
             <a th:if="${q == null or #strings.isEmpty(q)}" href="/">← Back to home</a>
         </p>
         <div th:if="${param.msg}">
-            <div th:if="${param.msg == 'unavailable'}" class="banner warn">
+            <div th:if="${param.msg[0] == 'unavailable'}" class="banner warn">
                 Sorry, this book was just rented by someone else.
                 <a href="#" class="link">Request it?</a> <!-- placeholder for next story -->
             </div>
-            <div th:if="${param.msg == 'rented'}" class="banner ok">
+            <div th:if="${param.msg[0] == 'rented'}" class="banner ok">
                 Success! You have rented this book.
+            </div>
+            <div th:if="${param.msg[0] == 'returned'}" class="banner ok">
+                Thanks! Book returned successfully.
             </div>
         </div>
 
@@ -153,7 +156,12 @@
                 <p><strong>ISBN:</strong> <span th:text="${book.isbn}">Book ISBN</span></p>
                 <p><strong>Status:</strong>
                     <span th:if="${book.available}" class="badge ok">Available</span>
-                    <span th:if="${!book.available}" class="badge no">Checked out</span>
+                    <span th:if="${!book.available}" class="badge no">
+                        Checked out
+                        <span th:if="${book.dueDate != null and user != null and user == book.rentedBy}">
+                            (due <span th:text="${#temporals.format(book.dueDate, 'MMMM d, yyyy')}">October 31, 2025</span>)
+                        </span>
+                    </span>
                 </p>
             </div>
         </div>
