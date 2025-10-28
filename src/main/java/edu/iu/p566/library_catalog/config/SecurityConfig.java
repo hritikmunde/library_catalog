@@ -25,7 +25,11 @@ public class SecurityConfig {
             .password("password")
             .roles("USER")
             .build();
-        return new InMemoryUserDetailsManager(hritik, harsh);
+        UserDetails testuser = User.withUsername("testuser")
+            .password("password")
+            .roles("USER")
+            .build();
+        return new InMemoryUserDetailsManager(hritik, harsh, testuser);
     }
 
     @Bean
