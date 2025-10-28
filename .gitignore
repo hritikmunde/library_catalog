@@ -37,3 +37,4 @@ library.db
 *.log
 .env
 target/
+/,devcontainer/
