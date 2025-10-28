@@ -32,3 +32,8 @@ build/
 ### VS Code ###
 .vscode/
 .DS_Store
+
+library.db
+*.log
+.env
+target/
