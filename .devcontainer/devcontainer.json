@@ -11,7 +11,10 @@
 			"installMaven": "true",
 			"installGradle": "false"
 		}
-	}
+	},
+
+	"containerEnv": { "SPRING_PROFILES_ACTIVE": "dev" }
+
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
