@@ -20,6 +20,8 @@ WORKDIR /opt/app
 # run as non-root
 RUN addgroup -S spring && adduser -S spring -G spring
 
+RUN apk add --no-cache libstdc++
+
 # copy app
 COPY --from=build /app/target/*-SNAPSHOT.jar app.jar
 
