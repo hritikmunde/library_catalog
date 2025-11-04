@@ -44,8 +44,14 @@ jobs:
           API_KEY: ${{ secrets.RENDER_API_KEY }}
           SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
         run: |
-          curl -fsSL -X POST \
+          set -e
+          RESP=$(curl -sS -w "\n%{http_code}" -X POST \
             -H "Authorization: Bearer $API_KEY" \
             -H "Content-Type: application/json" \
-            https://api.render.com/v1/services/$SERVICE_ID/deploys \
-            -d '{"clearCache":false}'
+            "https://api.render.com/v1/services/$SERVICE_ID/deploys" \
+            -d '{"clearCache":false}')
+          STATUS=$(echo "$RESP" | tail -n1)
+          BODY=$(echo "$RESP" | sed '$d')
+          echo "HTTP $STATUS"
+          echo "$BODY"
+          test "$STATUS" = "201"
