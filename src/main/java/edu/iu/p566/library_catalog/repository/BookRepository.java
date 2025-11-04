@@ -25,7 +25,7 @@ public interface BookRepository extends CrudRepository<Book, Long> {
                 b.rentedBy = :username
             WHERE b.id = :id
                 AND b.available = true
-                AND b.rentedBy IS NULL
+                AND (b.rentedBy IS NULL OR b.rentedBy = '')
     """)
     int rentBook(@Param("id") Long id, @Param("username") String username);
 

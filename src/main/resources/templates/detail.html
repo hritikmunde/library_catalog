@@ -184,6 +184,13 @@
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                 <button type="submit" class="btn" style="background:#10b981;">Return book</button>
             </form>
+            <form th:if="${user == book.rentedBy and book.requestedBy == null and book.extensions < maxExtensions}" th:action="@{/books/{id}/extend(id=${book.id})}" method="post">
+            <button type="submit" class="btn">Extend by [[${@environment.getProperty('app.loan-days','14')}]] days</button>
+            </form>
+
+            <button type="button" disabled th:if="${user == book.rentedBy and (book.requestedBy != null or book.extensions >= maxExtensions)}" title="Extension not available">
+                Extend (unavailable)
+            </button>
         </div>
     </div>
 </body>

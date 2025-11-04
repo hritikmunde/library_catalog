@@ -39,4 +39,7 @@ public class Book {
     // Rental dates
     private LocalDate rentedAt;
     private LocalDate dueDate;
+
+    @Builder.Default
+    private int extensions = 0;
 }
