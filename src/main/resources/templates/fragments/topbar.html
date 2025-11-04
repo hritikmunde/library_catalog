@@ -10,6 +10,7 @@
     </div>
 
     <div class="actions">
+      <a sec:authorize="isAuthenticated()" href="/my-books" class="btn" style="background:#111827">My Bookings</a>
       <a sec:authorize="!isAuthenticated()" th:href="@{/login(continue=${continueUrl})}" class="btn">Login</a>
       <div sec:authorize="isAuthenticated()" class="profile">
         <div class="avatar" th:text="${#authentication?.name?.substring(0,1).toUpperCase()}">U</div>

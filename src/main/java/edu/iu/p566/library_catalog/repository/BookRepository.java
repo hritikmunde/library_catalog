@@ -28,4 +28,7 @@ public interface BookRepository extends CrudRepository<Book, Long> {
                 AND b.rentedBy IS NULL
     """)
     int rentBook(@Param("id") Long id, @Param("username") String username);
+
+    List<Book> findByRentedBy(String username);
+    List<Book> findByRequestedBy(String username);
 }
