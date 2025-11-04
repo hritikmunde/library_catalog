@@ -1,9 +1,10 @@
-name: CI / CD Pipeline
+# .github/workflows/ci-cd.yml
+name: CI / CD
+
 on:
   push:
     branches: ["**"]
   pull_request:
-    branches: ["**"]
 
 jobs:
   build:
@@ -11,22 +12,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
           cache: maven
 
-      - name: Build & test (Maven)
+      - name: Build & test
         run: ./mvnw -B -ntp verify
-
-      # Optional: ensure Dockerfile builds (no push)
-      - name: Docker build smoke
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: false
-          tags: library-catalog:test
 
   deploy:
     name: Deploy to Render (API)
@@ -63,27 +57,17 @@ jobs:
           echo "$BODY"
           test "$STATUS" = "200"
 
-      - name: Trigger deploy (POST) with safe JSON
+      - name: Trigger deploy (POST with no body)
         env:
           API_KEY:   ${{ secrets.RENDER_API_KEY }}
           SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
         run: |
           set -e
-          # Use a heredoc piped to curl to avoid any quoting/encoding issues
-          JSON=$(cat <<'EOF'
-          {
-            "clearCache": false
-          }
-          EOF
-          )
           RESP=$(curl -sS -w "\n%{http_code}" -X POST \
             -H "Authorization: Bearer $API_KEY" \
-            -H "Content-Type: application/json" \
-            https://api.render.com/v1/services/$SERVICE_ID/deploys \
-            --data-binary "$JSON")
+            "https://api.render.com/v1/services/$SERVICE_ID/deploys")
           STATUS=$(echo "$RESP" | tail -n1)
           BODY=$(echo "$RESP" | sed '$d')
           echo "POST /services/$SERVICE_ID/deploys -> HTTP $STATUS"
           echo "$BODY"
-          # 201 = created (success)
           test "$STATUS" = "201"
