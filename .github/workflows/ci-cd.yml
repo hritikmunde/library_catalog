@@ -45,13 +45,13 @@ jobs:
           SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
         run: |
           set -e
+          BODY=$(jq -n '{clearCache:false}')
           RESP=$(curl -sS -w "\n%{http_code}" -X POST \
             -H "Authorization: Bearer $API_KEY" \
             -H "Content-Type: application/json" \
             "https://api.render.com/v1/services/$SERVICE_ID/deploys" \
-            -d '{"clearCache":false}')
+            --data "$BODY")
           STATUS=$(echo "$RESP" | tail -n1)
-          BODY=$(echo "$RESP" | sed '$d')
           echo "HTTP $STATUS"
-          echo "$BODY"
+          echo "$RESP" | sed '$d'
           test "$STATUS" = "201"
