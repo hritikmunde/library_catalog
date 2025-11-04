@@ -1,0 +1,71 @@
+<!-- src/main/resources/templates/my_books.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <title>My Bookings</title>
+  <link rel="stylesheet" href="/css/header.css">
+  <style>
+    :root { --border:#e5e7eb; --muted:#6b7280; --blue:#2563eb; }
+    body{font-family:system-ui,Arial,sans-serif;background:#f8fafc;margin:0}
+    .wrap{max-width:980px;margin:2rem auto;background:#fff;border:1px solid var(--border);
+          border-radius:12px; padding:1.25rem}
+    h1{margin:.5rem 0 1rem}
+    h2{font-size:1.1rem;margin:1.5rem 0 .5rem;color:#111827}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem}
+    .card{border:1px solid var(--border);border-radius:10px;padding:1rem;background:#fff}
+    .card img{width:100%;height:160px;object-fit:cover;border-radius:8px;margin-bottom:.5rem}
+    .meta{color:var(--muted);font-size:.9rem}
+    .row{display:flex;gap:.5rem;align-items:center;justify-content:space-between;margin-top:.5rem}
+    .badge{font-size:.78rem;border-radius:9999px;padding:.2rem .55rem;background:#eef2ff}
+    .btn{display:inline-block;background:var(--blue);color:#fff;padding:.4rem .7rem;border-radius:.5rem;text-decoration:none}
+    .empty{color:var(--muted);border:2px dashed var(--border);border-radius:10px;padding:1rem;text-align:center}
+  </style>
+</head>
+<body>
+  <div th:replace="fragments/topbar :: topbar"></div>
+
+  <div class="wrap">
+    <h1>My Bookings</h1>
+
+    <!-- Rentals -->
+    <h2>My Current Rentals</h2>
+    <div th:if="${#lists.isEmpty(rentals)}" class="empty">You haven’t rented any books yet.</div>
+    <div class="grid" th:if="${!#lists.isEmpty(rentals)}">
+      <div class="card" th:each="b : ${rentals}">
+        <img th:if="${b.imageUrl}" th:src="${b.imageUrl}" alt="" />
+        <div class="title" th:text="${b.title}">Title</div>
+        <div class="meta">
+          <span th:text="${b.author}">Author</span> •
+          <span th:text="${b.isbn}">ISBN</span>
+        </div>
+        <div class="row">
+          <span class="badge"
+                th:text="${b.dueDate != null ? 'Due ' + #temporals.format(b.dueDate, 'MMM d, yyyy') : 'Due date TBD'}">
+            Due …
+          </span>
+          <a th:href="@{/books/{id}(id=${b.id})}" class="btn">View</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Requests -->
+    <h2 style="margin-top:2rem">My Requests</h2>
+    <div th:if="${#lists.isEmpty(requests)}" class="empty">You have no active requests.</div>
+    <div class="grid" th:if="${!#lists.isEmpty(requests)}">
+      <div class="card" th:each="b : ${requests}">
+        <img th:if="${b.imageUrl}" th:src="${b.imageUrl}" alt="" />
+        <div class="title" th:text="${b.title}">Title</div>
+        <div class="meta">
+          <span th:text="${b.author}">Author</span> •
+          <span th:text="${b.isbn}">ISBN</span>
+        </div>
+        <div class="row">
+          <span class="badge">Requested</span>
+          <a th:href="@{/books/{id}(id=${b.id})}" class="btn" style="background:#111827">Details</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

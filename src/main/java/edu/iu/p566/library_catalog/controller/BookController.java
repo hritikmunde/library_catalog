@@ -102,6 +102,18 @@ public class BookController {
         return "redirect:/books/" + id + (q != null ? ("?q=" + q) : "");
     }
 
+    @GetMapping("/my-books")
+    public String myBooks(Model model, Principal principal) {
+        if (principal == null) {
+            return "redirect:/login?redirect=/my-books";
+        }
+        String user = principal.getName();
+        model.addAttribute("rentals", bookRepository.findByRentedBy(user));
+        model.addAttribute("requests", bookRepository.findByRequestedBy(user));
+        model.addAttribute("user", user);
+        return "my_books"; // This will look for a template named "mybooks.html"
+    }
+
     @Value("${app.loan-days:14}")
     private int loanDays;
 }
