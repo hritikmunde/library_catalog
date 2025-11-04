@@ -8,6 +8,7 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 public interface BookRepository extends CrudRepository<Book, Long> {
     @Query("""
@@ -18,6 +19,10 @@ public interface BookRepository extends CrudRepository<Book, Long> {
     """)
     List<Book> search(@Param("keyword") String keyword);
 
+    List<Book> findByRentedBy(String username);
+    List<Book> findByRequestedBy(String username);
+
+    @Transactional
     @Modifying
     @Query("""
             UPDATE Book b
@@ -28,7 +33,4 @@ public interface BookRepository extends CrudRepository<Book, Long> {
                 AND (b.rentedBy IS NULL OR b.rentedBy = '')
     """)
     int rentBook(@Param("id") Long id, @Param("username") String username);
-
-    List<Book> findByRentedBy(String username);
-    List<Book> findByRequestedBy(String username);
 }

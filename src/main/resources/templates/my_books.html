@@ -1,71 +1,84 @@
-<!-- src/main/resources/templates/my_books.html -->
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8" />
-  <title>My Bookings</title>
+  <meta charset="UTF-8">
+  <title>My Books</title>
   <link rel="stylesheet" href="/css/header.css">
   <style>
-    :root { --border:#e5e7eb; --muted:#6b7280; --blue:#2563eb; }
-    body{font-family:system-ui,Arial,sans-serif;background:#f8fafc;margin:0}
-    .wrap{max-width:980px;margin:2rem auto;background:#fff;border:1px solid var(--border);
-          border-radius:12px; padding:1.25rem}
-    h1{margin:.5rem 0 1rem}
-    h2{font-size:1.1rem;margin:1.5rem 0 .5rem;color:#111827}
-    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem}
-    .card{border:1px solid var(--border);border-radius:10px;padding:1rem;background:#fff}
-    .card img{width:100%;height:160px;object-fit:cover;border-radius:8px;margin-bottom:.5rem}
-    .meta{color:var(--muted);font-size:.9rem}
-    .row{display:flex;gap:.5rem;align-items:center;justify-content:space-between;margin-top:.5rem}
-    .badge{font-size:.78rem;border-radius:9999px;padding:.2rem .55rem;background:#eef2ff}
-    .btn{display:inline-block;background:var(--blue);color:#fff;padding:.4rem .7rem;border-radius:.5rem;text-decoration:none}
-    .empty{color:var(--muted);border:2px dashed var(--border);border-radius:10px;padding:1rem;text-align:center}
+    body{font-family:system-ui,Arial,sans-serif;background:#f9fafb;margin:0}
+    .wrap{max-width:900px;margin:2rem auto;background:#fff;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.06);padding:1.5rem}
+    h1{margin:0 0 1rem}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:.7rem;border-bottom:1px solid #e5e7eb;text-align:left}
+    .muted{color:#6b7280}
+    .btn{background:#2563eb;color:#fff;padding:.4rem .7rem;border-radius:.4rem;text-decoration:none;border:0;cursor:pointer}
+    .btn-outline{background:#fff;color:#2563eb;border:1px solid #2563eb}
+    .btn-danger{background:#ef4444}
+    .grid{display:grid;grid-template-columns:1fr;gap:1.25rem}
+    .section h2{margin:.5rem 0}
+    form{display:inline}
   </style>
 </head>
 <body>
-  <div th:replace="fragments/topbar :: topbar"></div>
+<header th:replace="fragments/topbar :: topbar"></header>
 
-  <div class="wrap">
-    <h1>My Bookings</h1>
+<main class="wrap">
+  <h1>Your books</h1>
 
-    <!-- Rentals -->
-    <h2>My Current Rentals</h2>
-    <div th:if="${#lists.isEmpty(rentals)}" class="empty">You haven’t rented any books yet.</div>
-    <div class="grid" th:if="${!#lists.isEmpty(rentals)}">
-      <div class="card" th:each="b : ${rentals}">
-        <img th:if="${b.imageUrl}" th:src="${b.imageUrl}" alt="" />
-        <div class="title" th:text="${b.title}">Title</div>
-        <div class="meta">
-          <span th:text="${b.author}">Author</span> •
-          <span th:text="${b.isbn}">ISBN</span>
-        </div>
-        <div class="row">
-          <span class="badge"
-                th:text="${b.dueDate != null ? 'Due ' + #temporals.format(b.dueDate, 'MMM d, yyyy') : 'Due date TBD'}">
-            Due …
-          </span>
-          <a th:href="@{/books/{id}(id=${b.id})}" class="btn">View</a>
-        </div>
-      </div>
-    </div>
+  <section class="section">
+    <h2>Currently Rented</h2>
+    <table th:if="${#lists.isEmpty(rentals) == false}">
+      <thead><tr><th>Title</th><th>Due</th><th class="muted">Extensions</th><th>Actions</th></tr></thead>
+      <tbody>
+      <tr th:each="b : ${rentals}">
+        <td><a th:href="@{/books/{id}(id=${b.id})}" th:text="${b.title}">Title</a></td>
+        <td>
+          <span th:if="${b.dueDate != null}" th:text="${#temporals.format(b.dueDate, 'MMM d, yyyy')}"></span>
+          <span th:if="${b.dueDate == null}" class="muted">—</span>
+        </td>
+        <td class="muted">[[${b.extensions}]] / [[${maxExtensions}]]</td>
+        <td>
+          <!-- Return -->
+          <form th:action="@{/books/{id}/return(id=${b.id})}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <button type="submit" class="btn btn-danger">Return</button>
+          </form>
 
-    <!-- Requests -->
-    <h2 style="margin-top:2rem">My Requests</h2>
-    <div th:if="${#lists.isEmpty(requests)}" class="empty">You have no active requests.</div>
-    <div class="grid" th:if="${!#lists.isEmpty(requests)}">
-      <div class="card" th:each="b : ${requests}">
-        <img th:if="${b.imageUrl}" th:src="${b.imageUrl}" alt="" />
-        <div class="title" th:text="${b.title}">Title</div>
-        <div class="meta">
-          <span th:text="${b.author}">Author</span> •
-          <span th:text="${b.isbn}">ISBN</span>
-        </div>
-        <div class="row">
-          <span class="badge">Requested</span>
-          <a th:href="@{/books/{id}(id=${b.id})}" class="btn" style="background:#111827">Details</a>
-        </div>
-      </div>
-    </div>
-  </div>
+          <!-- Extend -->
+          <form th:if="${b.extensions < maxExtensions}"
+                th:action="@{/books/{id}/extend(id=${b.id})}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <button type="submit" class="btn btn-outline">
+              Extend +[[${@environment.getProperty('app.loan-days','14')}]]d
+            </button>
+          </form>
+          <button th:if="${b.extensions >= maxExtensions}" class="btn btn-outline" disabled>Extend (maxed)</button>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+    <p th:if="${#lists.isEmpty(rentals)}" class="muted">You have no current rentals.</p>
+  </section>
+
+  <section class="section" style="margin-top:1.25rem">
+    <h2>Waitlist</h2>
+    <table th:if="${#lists.isEmpty(requests) == false}">
+      <thead><tr><th>Title</th><th>Your position</th><th>Actions</th></tr></thead>
+      <tbody>
+      <tr th:each="req : ${requests}">
+        <td><a th:href="@{/books/{id}(id=${req.book.id})}" th:text="${req.book.title}">Title</a></td>
+        <td># [[${req.position}]]</td>
+        <td>
+          <form th:action="@{/books/{id}/unrequest(id=${req.book.id})}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <button type="submit" class="btn btn-outline">Remove</button>
+          </form>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+    <p th:if="${#lists.isEmpty(requests)}" class="muted">You aren't on any waitlists.</p>
+  </section>
+</main>
 </body>
 </html>

@@ -2,14 +2,18 @@ package edu.iu.p566.library_catalog.controller;
 
 import org.springframework.beans.factory.annotation.Value;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import edu.iu.p566.library_catalog.model.Book;
+import edu.iu.p566.library_catalog.model.WaitlistEntry;
 import edu.iu.p566.library_catalog.repository.BookRepository;
+import edu.iu.p566.library_catalog.repository.WaitlistRepository;
+
 //import jakarta.transaction.Transactional;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.Principal;
-
+import java.util.List;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,9 +33,11 @@ public class BookController {
     private int maxExtensions;
 
     private final BookRepository bookRepository;
+    private final WaitlistRepository waitlistRepository;
 
-    public BookController(BookRepository bookRepository) {
+    public BookController(BookRepository bookRepository, WaitlistRepository waitlistRepository) {
         this.bookRepository = bookRepository;
+        this.waitlistRepository = waitlistRepository;
     }
 
     // @GetMapping("/books")
@@ -49,6 +55,20 @@ public class BookController {
         model.addAttribute("q", q);
         model.addAttribute("maxExtensions", maxExtensions);
         
+        long queueSize = waitlistRepository.countByBookId(id);
+        Integer myPosition = null;
+        if (principal != null && queueSize > 0) {
+            List<WaitlistEntry> list = waitlistRepository.findByBookIdOrderByCreatedAtAsc(id);
+            for (int i = 0; i < list.size(); i++) {
+                if (list.get(i).getUsername().equals(principal.getName())) {
+                    myPosition = i + 1;
+                    break;
+                }
+            }
+        }
+        model.addAttribute("queueSize", queueSize);
+        model.addAttribute("myPosition", myPosition);
+
         return "detail"; // This will look for a template named "book_detail.html"
     }
 
@@ -91,17 +111,35 @@ public class BookController {
     }
 
     @PostMapping("/books/{id}/request")
-    public String requestBook(@PathVariable Long id, Principal principal) {
+    @Transactional
+    public String requestBook(@PathVariable Long id, @RequestParam(value="q", required=false) String q, Principal principal) {
+        
+        if (principal == null) {
+            String cont = "/books/" + id + (q != null ? ("?q=" + q) : "");
+            return "redirect:/login?continue=" + cont;
+        }
         Book book = bookRepository.findById(id).orElseThrow();
-        if (principal == null) return "redirect:/login?continue=/books/" + id;
-        if (principal.getName().equals(book.getRentedBy())) {
-            return "redirect:/books/" + id + "?msg=you-already-have-it";
+        if (book.isAvailable()) {
+            return "redirect:/books/" + id + (q != null ? ("?q=" + q) : "");
         }
-        if (!book.isAvailable() && book.getRequestedBy() == null) {
-            book.setRequestedBy(principal.getName());
-            bookRepository.save(book);
+        if (!waitlistRepository.existsByBookIdAndUsername(id, principal.getName())) {
+            waitlistRepository.save(WaitlistEntry.builder()
+                    .bookId(id)
+                    .username(principal.getName())
+                    .createdAt(LocalDateTime.now())
+                    .build());
         }
-        return "redirect:/books/" + id;
+        return "redirect:/books/" + id + (q != null ? ("?q=" + q + "&msg=requested") : "?msg=requested");
+    }
+    @PostMapping("/books/{id}/unrequest")
+    @Transactional
+    public String unrequestBook(@PathVariable Long id,
+                                @RequestParam(value="q", required=false) String q,
+                                Principal principal) {
+        if (principal != null) {
+            waitlistRepository.deleteByBookIdAndUsername(id, principal.getName());
+        }
+        return "redirect:/books/" + id + (q != null ? ("?q=" + q + "&msg=unrequested") : "?msg=unrequested");
     }
 
     @PostMapping("/books/{id}/extend")
@@ -114,38 +152,50 @@ public class BookController {
             return "redirect:/login?continue=/books/" + id + (q != null ? ("?q=" + q) : "");
         }
 
-        Book book = bookRepository.findById(id).orElseThrow();
+        // Book book = bookRepository.findById(id).orElseThrow();
+        // boolean notRequested = waitlistRepository.countByBookId(id) == 0;
 
-        // must be the current renter
-        if (!principal.getName().equals(book.getRentedBy())) {
-            ra.addFlashAttribute("error", "You can only extend a book you rented.");
-            return "redirect:/books/" + id + (q != null ? ("?q=" + q) : "");
+        // // must be the current renter
+        // if (!principal.getName().equals(book.getRentedBy())) {
+        //     ra.addFlashAttribute("error", "You can only extend a book you rented.");
+        //     return "redirect:/books/" + id + (q != null ? ("?q=" + q) : "");
+        // }
+
+        // // do not extend if someone has requested it
+        // if (book.getRequestedBy() != null && !book.getRequestedBy().isBlank()) {
+        //     ra.addFlashAttribute("error", "Extension not allowed: another user has requested this book.");
+        //     return "redirect:/books/" + id + (q != null ? ("?q=" + q) : "");
+        // }
+
+        // // honor maxExtensions
+        // if (book.getExtensions() >= maxExtensions) {
+        //     ra.addFlashAttribute("error", "You’ve already used your extension.");
+        //     return "redirect:/books/" + id + (q != null ? ("?q=" + q) : "");
+        // }
+
+        // // extend from current due date (or today if missing)
+        // var base = (book.getDueDate() != null ? book.getDueDate() : LocalDate.now());
+        // book.setDueDate(base.plusDays(loanDays));
+        // book.setExtensions(book.getExtensions() + 1);
+        // bookRepository.save(book);
+
+        // ra.addFlashAttribute("success", "Extension successful. New due date: " + book.getDueDate() + ".");
+        // return "redirect:/books/" + id + (q != null ? ("?q=" + q) : "");
+        Book b = bookRepository.findById(id).orElseThrow();
+        boolean isRenter = principal.getName().equals(b.getRentedBy());
+        boolean notRequested = waitlistRepository.countByBookId(id) == 0;
+        if (!b.isAvailable() && isRenter && notRequested && b.getExtensions() < maxExtensions) {
+            b.setDueDate(b.getDueDate().plusDays(loanDays));
+            b.setExtensions(b.getExtensions() + 1);
+            bookRepository.save(b);
+            return "redirect:/books/" + id + (q != null ? ("?q=" + q + "&msg=extended") : "?msg=extended");
         }
-
-        // do not extend if someone has requested it
-        if (book.getRequestedBy() != null && !book.getRequestedBy().isBlank()) {
-            ra.addFlashAttribute("error", "Extension not allowed: another user has requested this book.");
-            return "redirect:/books/" + id + (q != null ? ("?q=" + q) : "");
-        }
-
-        // honor maxExtensions
-        if (book.getExtensions() >= maxExtensions) {
-            ra.addFlashAttribute("error", "You’ve already used your extension.");
-            return "redirect:/books/" + id + (q != null ? ("?q=" + q) : "");
-        }
-
-        // extend from current due date (or today if missing)
-        var base = (book.getDueDate() != null ? book.getDueDate() : LocalDate.now());
-        book.setDueDate(base.plusDays(loanDays));
-        book.setExtensions(book.getExtensions() + 1);
-        bookRepository.save(book);
-
-        ra.addFlashAttribute("success", "Extension successful. New due date: " + book.getDueDate() + ".");
-        return "redirect:/books/" + id + (q != null ? ("?q=" + q) : "");
+        return "redirect:/books/" + id + (q != null ? ("?q=" + q + "&msg=extend_unavailable") : "?msg=extend_unavailable");
     }
 
 
     @PostMapping("/books/{id}/return")
+    @Transactional
     public String returnBook(@PathVariable Long id, @RequestParam(value = "q", required = false) String q, Principal principal) {
         Book book = bookRepository.findById(id).orElseThrow();
         if (!book.isAvailable() && principal != null && principal.getName().equals(book.getRentedBy())) {
@@ -155,6 +205,20 @@ public class BookController {
             book.setDueDate(null);
             book.setExtensions(0);
             bookRepository.save(book);
+            
+            var next = waitlistRepository.findFirstByBookIdOrderByCreatedAtAsc(id);
+            if (next.isPresent()) {
+                Book b = bookRepository.findById(id).orElseThrow();
+                b.setAvailable(false);
+                b.setRentedBy(next.get().getUsername());
+                b.setRentedAt(LocalDate.now());
+                b.setDueDate(LocalDate.now().plusDays(loanDays));
+                b.setExtensions(0);
+                bookRepository.save(b);
+                waitlistRepository.deleteById(next.get().getId());
+                // optional: add a message parameter to indicate reassignment
+                return "redirect:/books/" + id + (q != null ? ("?q=" + q + "&msg=returned_reassigned") : "?msg=returned_reassigned");
+            }
             return "redirect:/books/" + id + (q != null ? ("?q=" + q + "&msg=returned") : "?msg=returned");
         }
         return "redirect:/books/" + id + (q != null ? ("?q=" + q) : "");
@@ -163,12 +227,26 @@ public class BookController {
     @GetMapping("/my-books")
     public String myBooks(Model model, Principal principal) {
         if (principal == null) {
-            return "redirect:/login?redirect=/my-books";
+            return "redirect:/login?continue=/my-books";
         }
         String user = principal.getName();
-        model.addAttribute("rentals", bookRepository.findByRentedBy(user));
-        model.addAttribute("requests", bookRepository.findByRequestedBy(user));
         model.addAttribute("user", user);
+        model.addAttribute("rentals", bookRepository.findByRentedBy(user));
+        var entries = waitlistRepository.findByBookIdOrderByCreatedAtAsc(null);
+        record MyRequest(Book book, Integer position) {}
+        var myRequests = new java.util.ArrayList<MyRequest>();
+        for (Book b : bookRepository.findAll()) {
+            List<edu.iu.p566.library_catalog.model.WaitlistEntry> queue =
+                waitlistRepository.findByBookIdOrderByCreatedAtAsc(b.getId());
+            for (int i=0; i<queue.size(); i++) {
+                if (queue.get(i).getUsername().equals(user)) {
+                    myRequests.add(new MyRequest(b, i+1));
+                    break;
+                }
+            }
+        }
+        model.addAttribute("requests", myRequests);
+        model.addAttribute("maxExtensions", maxExtensions);
         return "my_books"; // This will look for a template named "mybooks.html"
     }
 }

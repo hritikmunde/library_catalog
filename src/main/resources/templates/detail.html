@@ -138,14 +138,14 @@
         <div th:if="${param.msg}">
             <div th:if="${param.msg[0] == 'unavailable'}" class="banner warn">
                 Sorry, this book was just rented by someone else.
-                <a href="#" class="link">Request it?</a> <!-- placeholder for next story -->
             </div>
-            <div th:if="${param.msg[0] == 'rented'}" class="banner ok">
-                Success! You have rented this book.
-            </div>
-            <div th:if="${param.msg[0] == 'returned'}" class="banner ok">
-                Thanks! Book returned successfully.
-            </div>
+            <div th:if="${param.msg[0] == 'rented'}" class="banner ok">Success! You have rented this book.</div>
+            <div th:if="${param.msg[0] == 'returned'}" class="banner ok">Thanks! Book returned successfully.</div>
+            <div th:if="${param.msg[0] == 'extended'}" class="banner ok">Your loan was extended.</div>
+            <div th:if="${param.msg[0] == 'extend_unavailable'}" class="banner warn">Extension unavailable (requested by someone else or limit reached).</div>
+            <div th:if="${param.msg[0] == 'requested'}" class="banner ok">Added to the waitlist.</div>
+            <div th:if="${param.msg[0] == 'unrequested'}" class="banner ok">Removed from waitlist.</div>
+            <div th:if="${param.msg[0] == 'returned_reassigned'}" class="banner ok">Book returned and assigned to the next in the queue.</div>
         </div>
 
         <div class="book-header">
@@ -163,6 +163,10 @@
                         </span>
                     </span>
                 </p>
+                <p th:if="${!book.available}">
+                    <span th:text="'Requested by ' + ${queueSize} + ' user' + (${queueSize} == 1 ? '' : 's')"></span>
+                    <span th:if="${myPosition != null}" th:text="' • You are #' + ${myPosition} + ' in line'"></span>
+                </p>
             </div>
         </div>
         <div class="desc">
@@ -174,21 +178,46 @@
             <!-- If available: show Rent link to CHECKOUT (protected). Works for logged-out too (will login then return). -->
             <a th:if="${book.available}" th:href="@{/books/{id}/checkout(id=${book.id}, q=${q})}" class="btn">Rent</a>
 
-            <!-- If unavailable: disable Rent and show Request placeholder -->
-            <button th:if="${!book.available}" class="btn" disabled>Rent</button>
-            <a th:if="${!book.available}" href="#" class="btn btn-outline">Request</a>
+            <!-- Request (if unavailable) -->
+            <form th:if="${!book.available and user != null and myPosition == null}"
+                    th:action="@{/books/{id}/request(id=${book.id})}"
+                    method="post" style="display:inline;">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <button type="submit" class="btn btn-outline">Request</button>
+            </form>
 
-            <!-- Return (only show if current user has it) -->
-            <form th:if="${!book.available and user == book.rentedBy}" th:action="@{/books/{id}/return(id=${book.id})}"
-                method="post" style="display:inline;">
+            <!-- If logged out, send them to login and come back to this book -->
+            <a th:if="${!book.available and user == null}"
+                th:href="@{/login(continue=${'/books/' + book.id + (q != null ? ('?q=' + q) : '')})}"
+                class="btn btn-outline">Request</a>
+
+            <!-- Unrequest (if in queue) -->
+            <form th:if="${!book.available and myPosition != null}"
+                    th:action="@{/books/{id}/unrequest(id=${book.id})}" method="post" style="display:inline">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <button type="submit" class="btn btn-outline">Remove Request</button>
+            </form>
+
+            <!-- Return (only renter) -->
+            <form th:if="${!book.available and user == book.rentedBy}"
+                    th:action="@{/books/{id}/return(id=${book.id})}" method="post" style="display:inline">
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                 <button type="submit" class="btn" style="background:#10b981;">Return book</button>
             </form>
-            <form th:if="${user == book.rentedBy and book.requestedBy == null and book.extensions < maxExtensions}" th:action="@{/books/{id}/extend(id=${book.id})}" method="post">
-            <button type="submit" class="btn">Extend by [[${@environment.getProperty('app.loan-days','14')}]] days</button>
+
+            <!-- Extend (only renter, no queue, under limit) -->
+            <form th:if="${user == book.rentedBy and queueSize == 0 and book.extensions < maxExtensions}"
+                    th:action="@{/books/{id}/extend(id=${book.id})}" method="post" style="display:inline">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <button type="submit" class="btn btn-outline">
+                Extend by [[${@environment.getProperty('app.loan-days','14')}]] days
+                </button>
             </form>
 
-            <button type="button" disabled th:if="${user == book.rentedBy and (book.requestedBy != null or book.extensions >= maxExtensions)}" title="Extension not available">
+            <!-- Disabled extend -->
+            <button type="button" disabled
+                    th:if="${user == book.rentedBy and (queueSize > 0 or book.extensions >= maxExtensions)}"
+                    class="btn btn-outline" title="Extension not available">
                 Extend (unavailable)
             </button>
         </div>
