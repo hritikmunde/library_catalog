@@ -1,8 +1,10 @@
 package edu.iu.p566.library_catalog.config;
 
+import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
@@ -38,6 +40,11 @@ public class SecurityConfig {
         return (NoOpPasswordEncoder) NoOpPasswordEncoder.getInstance();
     }
     
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        // IMPORTANT: This requires spring.h2.console.enabled=true AND H2 on classpath
+        return web -> web.ignoring().requestMatchers(PathRequest.toH2Console());
+    }
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         AuthenticationSuccessHandler successHandler = (request, response, authentication) -> {
