@@ -1,14 +1,8 @@
 package edu.iu.p566.library_catalog.config;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
@@ -21,57 +15,21 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationSu
 @Configuration
 public class SecurityConfig {
 
-    // @Bean
-    // public InMemoryUserDetailsManager userDetailsService() {
-    //     UserDetails hritik = User.withUsername("hritik")
-    //         .password("password")
-    //         .roles("USER")
-    //         .build();
-    //     UserDetails harsh = User.withUsername("harsh")
-    //         .password("password")
-    //         .roles("USER")
-    //         .build();
-    //     UserDetails testuser = User.withUsername("testuser")
-    //         .password("password")
-    //         .roles("USER")
-    //         .build();
-    //     return new InMemoryUserDetailsManager(hritik, harsh, testuser);
-    // }
-    
     @Bean
-    public InMemoryUserDetailsManager userDetailsService(
-        @Value("${ADMIN_USERNAME:}") String adminUser,
-        @Value("${ADMIN_PASSWORD:}") String adminPass
-    ) {
-        var users = new java.util.ArrayList<UserDetails>();
-        users.add(User.withUsername("hritik").password("{noop}password").roles("USER").build());
-        users.add(User.withUsername("harsh").password("{noop}password").roles("USER").build());
-        users.add(User.withUsername("testuser").password("{noop}password").roles("USER").build());
-
-        // Fallback admin for when env vars aren’t set (e.g., on your laptop)
-        if (adminUser == null || adminUser.isBlank() || adminPass == null || adminPass.isBlank()) {
-            adminUser = "admin";
-            adminPass = "admin";
-        }
-        users.add(User.withUsername(adminUser).password("{noop}" + adminPass).roles("ADMIN").build());
-
-        return new InMemoryUserDetailsManager(users);
-    }
-
-    @Bean
-    @Order(1)
-    public SecurityFilterChain h2ConsoleChain(HttpSecurity http) throws Exception {
-        http
-            .securityMatcher("/h2-console/**")               // <- string matcher, no bean lookup
-            .authorizeHttpRequests(auth -> auth
-               // .anyRequest().hasRole("ADMIN")  
-               .anyRequest().permitAll()              // or .permitAll() in dev if you prefer
-            )
-            .csrf(AbstractHttpConfigurer::disable)               // H2 posts to itself
-            .headers(h -> h.frameOptions(f -> f.sameOrigin()))   // frames
-            .httpBasic(AbstractHttpConfigurer::disable)          // no auth while testing
-            .formLogin(AbstractHttpConfigurer::disable); 
-        return http.build();
+    public InMemoryUserDetailsManager userDetailsService() {
+        UserDetails hritik = User.withUsername("hritik")
+            .password("password")
+            .roles("USER")
+            .build();
+        UserDetails harsh = User.withUsername("harsh")
+            .password("password")
+            .roles("USER")
+            .build();
+        UserDetails testuser = User.withUsername("testuser")
+            .password("password")
+            .roles("USER")
+            .build();
+        return new InMemoryUserDetailsManager(hritik, harsh, testuser);
     }
 
     @Bean
@@ -120,11 +78,6 @@ public class SecurityConfig {
             .csrf(csrf -> csrf
                 .ignoringRequestMatchers("/login", "/logout")    
             
-            )
-            .headers(headers -> headers
-                .frameOptions(frameOptions -> frameOptions
-                    .sameOrigin()
-                )
             );
         return http.build();
     }
