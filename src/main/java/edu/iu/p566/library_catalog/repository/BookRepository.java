@@ -33,4 +33,32 @@ public interface BookRepository extends CrudRepository<Book, Long> {
                 AND (b.rentedBy IS NULL OR b.rentedBy = '')
     """)
     int rentBook(@Param("id") Long id, @Param("username") String username);
+
+    @Query("""
+            SELECT b FROM Book b
+            WHERE (
+                :keyword IS NULL OR
+                LOWER(b.title)  LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+                LOWER(b.author) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+                LOWER(b.isbn)   LIKE LOWER(CONCAT('%', :keyword, '%'))
+            )
+            AND (:author IS NULL OR b.author = :author)
+            AND (:availability IS NULL OR b.available = :availability)
+            ORDER BY b.title
+    """)
+    List<Book> searchAdvanced(@Param("keyword") String keyword,
+                            @Param("author") String author,
+                            @Param("availability") Boolean availability);
+
+    @Query("""
+            SELECT DISTINCT b.author FROM Book b
+            WHERE (
+                :keyword IS NULL OR
+                LOWER(b.title)  LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+                LOWER(b.author) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+                LOWER(b.isbn)   LIKE LOWER(CONCAT('%', :keyword, '%'))
+            )
+            ORDER BY b.author
+    """)
+    List<String> facetAuthors(@Param("keyword") String keyword);
 }

@@ -3,50 +3,116 @@
 <head>
   <meta charset="UTF-8" />
   <title th:text="${#strings.isEmpty(query) ? 'Search' : 'Results for ' + query}">Search</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <link rel="stylesheet" href="/css/header.css">
-
   <style>
-    body{font-family:system-ui,Arial,sans-serif;background:#f9fafb;margin:2rem;}
-    .wrap{max-width:900px;margin:0 auto;background:#fff;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.05);padding:2rem;}
-    table{width:100%;border-collapse:collapse;margin-top:1rem;}
-    th,td{padding:.75rem;border-bottom:1px solid #e5e7eb;text-align:left;}
+    :root{--blue:#2563eb;--border:#e5e7eb;--muted:#6b7280;--bg:#f8fafb}
+    body{margin:0;font-family:system-ui,Arial,sans-serif;background:var(--bg)}
+    .wrap{max-width:1100px;margin:1rem auto;padding:0 1rem}
+    .layout{display:grid;grid-template-columns:260px 1fr;gap:1rem}
+    .panel{background:#fff;border:1px solid var(--border);border-radius:.75rem;padding:1rem}
+
+    /* Filters */
+    .filters h1{margin:.25rem 0 1rem}
+    .searchbar{display:flex;gap:.5rem}
+    .searchbar input{flex:1;min-width:0;padding:.55rem;border:1px solid var(--border);border-radius:.5rem}
+    .searchbar button{padding:.55rem .9rem;border:none;border-radius:.5rem;background:var(--blue);color:#fff;cursor:pointer}
+    .filters form{display:grid;gap:.8rem;margin-top:1rem}
+    .row{display:grid;gap:.35rem}
+    .row select{padding:.55rem;border:1px solid var(--border);border-radius:.5rem}
+    .filters .apply{background:var(--blue);color:#fff;border:none;border-radius:.5rem;padding:.55rem .9rem;cursor:pointer}
+
+    /* Results table */
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:.7rem;border-bottom:1px solid var(--border);text-align:left}
+    a{color:var(--blue);text-decoration:none}
+    a:hover{text-decoration:underline}
     .badge{padding:.2rem .6rem;border-radius:9999px;font-size:.8rem}
-    .ok{background:#dcfce7} .no{background:#fee2e2}
-    a{color:#2563eb;text-decoration:none} a:hover{text-decoration:underline}
+    .ok{background:#dcfce7}
+    .no{background:#fee2e2}
+
+    /* Mobile */
+    @media (max-width: 800px){
+      .layout{grid-template-columns:1fr}
+      .filters{order:2}
+      .results{order:1}
+      .searchbar{flex-direction:column}
+      .searchbar button{width:100%}
+      table{font-size:.95rem}
+      th:nth-child(4), td:nth-child(4){white-space:nowrap}
+    }
   </style>
 </head>
 <body>
   <div th:replace="fragments/topbar :: topbar"></div>
 
-<div class="wrap">
-  <h1>Search</h1>
+  <main class="wrap layout">
+    <!-- Filters / Search -->
+    <aside class="panel filters">
+      <h1>Search</h1>
 
-  <form th:action="@{/search}" method="get">
-    <input name="q" th:value="${query}" placeholder="Title, author, or ISBN" style="padding:.5rem;min-width:320px;" />
-    <button type="submit" style="padding:.5rem 1rem;">Search</button>
-    <a href="/" style="margin-left:.5rem;">Home</a>
-  </form>
+      <!-- Main keyword bar -->
+      <form class="searchbar" th:action="@{/search}" method="get">
+        <input name="q" th:value="${query}" placeholder="Title, author, or ISBN"/>
+        <!-- Preserve current filters when re-searching -->
+        <input type="hidden" name="author" th:value="${selectedAuthor}">
+        <input type="hidden" name="available" th:value="${selectedAvail}">
+        <button type="submit">Search</button>
+      </form>
 
-  <div th:if="${#lists.isEmpty(books)}" style="margin-top:1rem;color:#6b7280;">
-    <span th:if="${#strings.isEmpty(query)}">Type something to search the catalog.</span>
-    <span th:if="${!#strings.isEmpty(query)}">No books found for "<span th:text="${query}">q</span>".</span>
-  </div>
+      <!-- Refinements -->
+      <form th:action="@{/search}" method="get">
+        <input type="hidden" name="q" th:value="${query}">
+        <div class="row">
+          <label for="author">Author</label>
+          <select id="author" name="author" th:value="${selectedAuthor}">
+            <option value="" th:selected="${selectedAuthor == ''}">Any</option>
+            <option th:each="a : ${authors}" th:value="${a}" th:text="${a}"
+                    th:selected="${a == selectedAuthor}"></option>
+          </select>
+        </div>
+        <div class="row">
+          <label for="available">Availability</label>
+          <select id="available" name="available" th:value="${selectedAvail}">
+            <option value="all"   th:selected="${selectedAvail == 'all'}">All</option>
+            <option value="true"  th:selected="${selectedAvail == 'true'}">Available</option>
+            <option value="false" th:selected="${selectedAvail == 'false'}">Checked out</option>
+          </select>
+        </div>
+        <button class="apply" type="submit">Apply filters</button>
+      </form>
+    </aside>
 
-  <table th:if="${!#lists.isEmpty(books)}">
-    <thead><tr><th>Title</th><th>Author</th><th>ISBN</th><th>Status</th><th></th></tr></thead>
-    <tbody>
-      <tr th:each="b : ${books}">
-        <td><a th:href="@{/books/{id}(id=${b.id}, q=${query})}" th:text="${b.title}">Title</a></td>
-        <td th:text="${b.author}">Author</td>
-        <td th:text="${b.isbn}">ISBN</td>
-        <td>
-          <span th:if="${b.rentedBy == null}" class="badge ok">Available</span>
-          <span th:if="${b.rentedBy != null}" class="badge no">Rented</span>
-        </td>
-        <td><a th:href="@{/books/{id}(id=${b.id})}">View</a></td>
-      </tr>
-    </tbody>
-  </table>
-</div>
+    <!-- Results -->
+    <section class="panel results">
+      <div th:if="${#lists.isEmpty(books)}" style="color:var(--muted)">
+        <span th:if="${#strings.isEmpty(query)}">Type something to search the catalog.</span>
+        <span th:if="${!#strings.isEmpty(query)}">No books found for "<span th:text="${query}">q</span>".</span>
+      </div>
+
+      <table th:if="${!#lists.isEmpty(books)}">
+        <thead>
+          <tr><th>Title</th><th>Author</th><th>ISBN</th><th>Status</th><th></th></tr>
+        </thead>
+        <tbody>
+          <tr th:each="b : ${books}">
+            <td>
+              <a th:href="@{/books/{id}(id=${b.id}, q=${query})}" th:text="${b.title}">Title</a>
+            </td>
+            <td th:text="${b.author}">Author</td>
+            <td th:text="${b.isbn}">ISBN</td>
+            <td>
+              <span th:if="${b.available}" class="badge ok">Available</span>
+              <span th:if="${!b.available}" class="badge no">Rented</span>
+            </td>
+            <td>
+              <!-- preserve filters when navigating to detail -->
+              <a th:href="@{/books/{id}(id=${b.id}, q=${query})}">View</a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
 </body>
 </html>
